@@ -1,0 +1,69 @@
+---
+title: "Regression Analysis on MTCARS"
+output: pdf_document
+geometry: margin=0.8in
+---
+### Executive Summary -
+In this study, we develop a regression model for the MTCARS dataset to answer two questions: 1.Is an automatic or manual transmission better for MPG? 2.How do you quantify the MPG difference between automatic and manual transmissions?  
+The best fit model we come up with is this: mpg = 33.70832 - 3.03134x1(Cyl=6) - 2.16368(Cyl=8) - 0.03211xHp - 2.49683xWt + 1.80921x1(am="Manual"). Based on this model, we conclude that manual transmission is better than automatic transmission for MPG. There is 1.80921 MPG increase when a car is manual transmission 
+with holding all of the other variables constant.
+
+### Exploratory Data Analysis on MTCARS -
+```{r}
+library(datasets)
+data(mtcars)
+str(mtcars)
+```
+### Regression Modeling -
+The modeling approach we use is **stepwise, backward elimination**, which involves starting with all candidate variables, testing the deletion of each variable using a chosen model comparison criterion, deleting the variable (if any) that improves the model the most by being deleted, and repeating this process until no further improvement is possible.
+```{r}
+## create an initial model with all variables
+fit <- lm(mpg~as.factor(cyl)+disp+hp+drat+wt+qsec+as.factor(vs)+as.factor(am)+
+          as.factor(gear)+as.factor(carb), data=mtcars)
+```
+```{r}
+## use the stepwise approach to come up with the best fit model
+mymodel <- step(fit, direction="backward")
+```
+```{r}
+summary(mymodel)
+```
+### Confidence Limits on the Estimated Coefficients -
+```{r}
+confint(mymodel)
+```
+### Conclusion -
+The best fit regression model:  
+**mpg = b0 - b1x1(Cyl=6) + b2x1(Cyl=8) + b3xHp + b4xWt + b5x1(am="Manual") + ei**  
+where b0 = 33.70832, b1 = -3.03134, b2 = -2.16368, b3 = -0.03211, b4 = -2.49683 and b5 = 1.80921 
+
+**Coefficients interpretation:**  
+b0    - mpg at 0 horse power, 0 weight and is automatic for 4 cylinders  
+b0+b1 - mpg at 0 horse power, 0 weight and is automatic for 6 cylinders  
+b0+b2 - mpg at 0 horse power, 0 weight and is automatic for 8 cylinders  
+b3    - change in mpg for each horse power at 0 weight, is automatic for 4 cylinders  
+b4    - change in mpg for each 1000 lbs of weight at 0 horse power and is automatic for 4 cylinders  
+b0+b5 - mpg at 0 horse power, 0 weight and is manual for 4 cylinders  
+ei    - everything we don't measure  
+
+Questions:  
+1.Is an automatic or manual transmission better for MPG?  
+Answer: **Manual transmission is better for MPG based on the coefficient b5 which is positive.**  
+
+2.How do you quantify the MPG difference between automatic and manual transmissions?  
+Answer: **There is a 1.80921 increase of MPG (more efficient) for manual tranmission than automatic transmission, holding all of the other variables, such as weight fixed. The 95% confidence interval of b5 coefficient is [-1.06093363, 4.679356394] as shown above**
+
+### Appendix A - Scatterplot Matrices for Exploratory Data Analysis
+```{r}
+pairs(~mpg+as.factor(cyl)+disp+hp+drat+wt+qsec+as.factor(vs)+as.factor(am)+
+        as.factor(gear)+as.factor(carb), panel = panel.smooth,
+        main = "mtcars data", data=mtcars, col=3)
+```
+
+### Appendix B - Model Dianostics and Residual Plot
+```{r}
+par(mfrow=c(2,2))
+plot(mymodel)
+par(mfrow=c(1,1))
+plot(predict(mymodel),resid(mymodel), main="Residual Plot", xlab="Predicted MPG", ylab="Residual")
+```
